@@ -130,7 +130,11 @@ jobs:
               with urllib.request.urlopen(request, timeout=60) as response:
                   print(f"NVD direct request: HTTP {response.status}")
           except urllib.error.HTTPError as error:
-              sys.exit(f"NVD direct request: HTTP {error.code}")
+              message = error.headers.get("message", "No explanation from NVD")
+              message = message.replace(key, "[REDACTED]")
+              sys.exit(
+                  f"NVD direct request: HTTP {error.code}; message: {message}"
+              )
           except urllib.error.URLError:
               sys.exit("NVD direct request: network or TLS error")
           PY
