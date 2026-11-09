@@ -115,6 +115,27 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>13.0.0</version>
+
+				<configuration>
+					<nvdApiKeyEnvironmentVariable>
+						NVD_API_KEY
+					</nvdApiKeyEnvironmentVariable>
+
+					<failBuildOnCVSS>7</failBuildOnCVSS>
+					<failOnError>true</failOnError>
+
+					<formats>
+						<format>HTML</format>
+						<format>JSON</format>
+					</formats>
+
+					<ossIndexAnalyzerEnabled>false</ossIndexAnalyzerEnabled>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
