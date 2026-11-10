@@ -103,46 +103,8 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Verify NVD API access
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: |
-          python3 - <<'PY'
-          import os
-          import sys
-          import urllib.request
-          import urllib.error
-
-          key = os.environ.get("NVD_API_KEY", "")
-
-          if not key:
-              sys.exit("NVD_API_KEY is empty or unavailable")
-
-          if key != key.strip():
-              sys.exit("NVD_API_KEY contains leading or trailing whitespace")
-
-          request = urllib.request.Request(
-              "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=1",
-              headers={"apiKey": key}
-          )
-
-          try:
-              with urllib.request.urlopen(request, timeout=60) as response:
-                  print(f"NVD direct request: HTTP {response.status}")
-          except urllib.error.HTTPError as error:
-              message = error.headers.get("message", "No explanation from NVD")
-              message = message.replace(key, "[REDACTED]")
-              sys.exit(
-                  f"NVD direct request: HTTP {error.code}; message: {message}"
-              )
-          except urllib.error.URLError:
-              sys.exit("NVD direct request: network or TLS error")
-          PY
-
       - name: Check dependencies for known vulnerabilities
         run: bash ./mvnw -B --no-transfer-progress dependency-check:check
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
       - name: Save SCA reports
         if: always()
