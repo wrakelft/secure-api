@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import ru.itmo.secure_api.user.UserRepository;
 
 @Configuration
@@ -42,21 +43,42 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .formLogin(form -> form.disable())
-                .httpBasic(basic -> basic.disable())
-                .logout(logout -> logout.disable())
-                .authorizeHttpRequests(auth -> auth.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                        .requestMatchers("/api/**").authenticated()
-                        .anyRequest().denyAll()
-                )
-                .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
-        return http.build();
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+        var loginRequest = PathPatternRequestMatcher.withDefaults()
+                .matcher(HttpMethod.POST, "/auth/login");
+
+        try {
+            http
+                    .csrf(csrf -> csrf
+                            .ignoringRequestMatchers(loginRequest)
+                    )
+                    .sessionManagement(session -> session
+                            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    )
+                    .formLogin(form -> form.disable())
+                    .httpBasic(basic -> basic.disable())
+                    .logout(logout -> logout.disable())
+                    .authorizeHttpRequests(auth -> auth
+                            .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+                            .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                            .requestMatchers("/api/**").authenticated()
+                            .anyRequest().denyAll()
+                    )
+                    .exceptionHandling(exceptions -> exceptions
+                            .authenticationEntryPoint(
+                                    new BearerTokenAuthenticationEntryPoint()
+                            )
+                    )
+                    .oauth2ResourceServer(oauth2 -> oauth2
+                            .jwt(Customizer.withDefaults())
+                    );
+
+            return http.build();
+        } catch (Exception exception) {
+            throw new IllegalStateException(
+                    "Failed to configure API security",
+                    exception
+            );
+        }
     }
 }
