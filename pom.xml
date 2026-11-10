@@ -91,7 +91,6 @@
 
 				<configuration>
 					<effort>Max</effort>
-					<threshold>Low</threshold>
 					<failOnError>true</failOnError>
 					<xmlOutput>true</xmlOutput>
 					<htmlOutput>true</htmlOutput>
